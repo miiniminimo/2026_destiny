@@ -6,33 +6,33 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem('accessToken')
-    const nickname = localStorage.getItem('nickname')
-    const email = localStorage.getItem('email')
-    return token ? { nickname, email } : null
+    if (!token) return null
+    return {
+      nickname: localStorage.getItem('nickname'),
+      email: localStorage.getItem('email'),
+    }
   })
+
+  const saveSession = (data) => {
+    if (data?.accessToken)  localStorage.setItem('accessToken', data.accessToken)
+    if (data?.refreshToken) localStorage.setItem('refreshToken', data.refreshToken)
+    if (data?.nickname)     localStorage.setItem('nickname', data.nickname)
+    if (data?.email)        localStorage.setItem('email', data.email)
+    setUser({ nickname: data.nickname, email: data.email })
+  }
 
   const login = useCallback(async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password })
-    localStorage.setItem('accessToken', data.accessToken)
-    localStorage.setItem('refreshToken', data.refreshToken)
-    localStorage.setItem('nickname', data.nickname)
-    localStorage.setItem('email', data.email)
-    setUser({ nickname: data.nickname, email: data.email })
+    saveSession(data)
   }, [])
 
   const signup = useCallback(async (email, password, nickname) => {
     const { data } = await api.post('/auth/signup', { email, password, nickname })
-    localStorage.setItem('accessToken', data.accessToken)
-    localStorage.setItem('refreshToken', data.refreshToken)
-    localStorage.setItem('nickname', data.nickname)
-    localStorage.setItem('email', data.email)
-    setUser({ nickname: data.nickname, email: data.email })
+    saveSession(data)
   }, [])
 
   const logout = useCallback(async () => {
-    try {
-      await api.post('/auth/logout')
-    } finally {
+    try { await api.post('/auth/logout') } finally {
       localStorage.clear()
       setUser(null)
     }

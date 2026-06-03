@@ -1,5 +1,6 @@
 package com.destinycode.user;
 
+import com.destinycode.common.exception.BusinessException;
 import com.destinycode.jwt.JwtUtil;
 import com.destinycode.user.dto.AuthResponse;
 import com.destinycode.user.dto.LoginRequest;
@@ -21,7 +22,7 @@ public class UserService {
     @Transactional
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw BusinessException.conflict("이미 사용 중인 이메일입니다.");
         }
 
         User user = User.builder()
@@ -30,18 +31,12 @@ public class UserService {
                 .nickname(request.getNickname())
                 .build();
 
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail());
+        String accessToken  = jwtUtil.generateAccessToken(user.getEmail());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
         user.setRefreshToken(refreshToken);
-
         userRepository.save(user);
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .build();
+        return toAuthResponse(user, accessToken, refreshToken);
     }
 
     @Transactional
@@ -53,17 +48,12 @@ public class UserService {
             throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail());
+        String accessToken  = jwtUtil.generateAccessToken(user.getEmail());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .build();
+        return toAuthResponse(user, accessToken, refreshToken);
     }
 
     @Transactional
@@ -74,10 +64,26 @@ public class UserService {
         });
     }
 
+    @Transactional(readOnly = true)
+    public AuthResponse getMe(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> BusinessException.notFound("사용자를 찾을 수 없습니다."));
+        return toAuthResponse(user, null, null);
+    }
+
     @Transactional
     public void deleteAccount(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> BusinessException.notFound("사용자를 찾을 수 없습니다."));
         userRepository.delete(user);
+    }
+
+    private AuthResponse toAuthResponse(User user, String accessToken, String refreshToken) {
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .build();
     }
 }

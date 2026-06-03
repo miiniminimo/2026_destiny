@@ -148,6 +148,9 @@ export default function Home() {
 
   // 오행 속성에 부합하는 AI 연성 도트 그래픽 매핑
   const getCharacterImage = (element) => {
+    if (sajuResult && sajuResult.imageData) {
+      return sajuResult.imageData;
+    }
     if (!element) return '/pixel_gold_knight.png';
     if (element.includes('Fire')) return '/pixel_fire_mage.png';
     if (element.includes('Metal')) return '/pixel_gold_knight.png';

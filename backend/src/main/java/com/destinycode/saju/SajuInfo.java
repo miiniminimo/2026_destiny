@@ -1,5 +1,6 @@
-package com.destinycode.user;
+package com.destinycode.saju;
 
+import com.destinycode.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,12 +42,16 @@ public class SajuInfo {
     private Integer birthDay;
 
     @Column(name = "birth_time")
-    private String birthTime; // "HH:mm" 포맷 또는 시간 모름 시 null
+    private String birthTime; // "HH:mm" 포맷, 모를 경우 null
 
     @Column(name = "birth_place", nullable = false)
     private String birthPlace;
 
-    @Column(name = "created_at")
+    @Lob
+    @Column(name = "image_data", columnDefinition = "LONGTEXT")
+    private String imageData;
+
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist

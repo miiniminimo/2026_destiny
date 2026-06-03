@@ -14,9 +14,15 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
 
 jwt:
-  secret: destiny-code-secret-key-must-be-at-least-256-bits-long-for-hs256
+  secret: ${JWT_SECRET:destiny-code-secret-key-must-be-at-least-256-bits-long-for-hs256}
   access-token-expiry: 1800000    # 30분 (ms)
   refresh-token-expiry: 604800000 # 7일 (ms)
+
+ai:
+  anthropic:
+    api-key: ${ANTHROPIC_API_KEY:}
+  openai:
+    api-key: ${OPENAI_API_KEY:}
 
 server:
   port: 8080

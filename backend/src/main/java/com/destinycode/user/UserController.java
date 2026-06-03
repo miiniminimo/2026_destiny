@@ -1,5 +1,6 @@
 package com.destinycode.user;
 
+import com.destinycode.common.ApiResponse;
 import com.destinycode.user.dto.AuthResponse;
 import com.destinycode.user.dto.LoginRequest;
 import com.destinycode.user.dto.SignupRequest;
@@ -10,8 +11,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -19,38 +18,35 @@ public class UserController {
 
     private final UserService userService;
 
-    // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest request) {
-        return ResponseEntity.ok(userService.signup(request));
+    public ResponseEntity<ApiResponse<AuthResponse>> signup(
+            @Valid @RequestBody SignupRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(userService.signup(request)));
     }
 
-    // 로그인
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(userService.login(request));
+    public ResponseEntity<ApiResponse<AuthResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(userService.login(request)));
     }
 
-    // 로그아웃 (토큰 무효화)
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(
+    public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal UserDetails userDetails) {
         userService.logout(userDetails.getUsername());
-        return ResponseEntity.ok(Map.of("message", "로그아웃 되었습니다."));
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 
-    // 내 정보 조회
     @GetMapping("/me")
-    public ResponseEntity<Map<String, String>> me(
+    public ResponseEntity<ApiResponse<AuthResponse>> me(
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(Map.of("email", userDetails.getUsername()));
+        return ResponseEntity.ok(ApiResponse.ok(userService.getMe(userDetails.getUsername())));
     }
 
-    // 회원 탈퇴
     @DeleteMapping("/me")
-    public ResponseEntity<Map<String, String>> deleteAccount(
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
             @AuthenticationPrincipal UserDetails userDetails) {
         userService.deleteAccount(userDetails.getUsername());
-        return ResponseEntity.ok(Map.of("message", "회원 탈퇴가 완료되었습니다."));
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 }
