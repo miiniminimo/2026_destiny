@@ -155,6 +155,15 @@ export default function Home() {
     return '/pixel_gold_knight.png'; // 기본값
   };
 
+  // 각 속성에 해당하는 정사각형 스킬 아이콘 매칭
+  const getSkillImage = (element) => {
+    if (!element) return '/pixel_skill_blue.png';
+    if (element.includes('Fire')) return '/pixel_skill_fire.png';
+    if (element.includes('Metal')) return '/pixel_skill_blue.png';
+    if (element.includes('Water')) return '/pixel_skill_fire.png'; // 대체 자원
+    return '/pixel_skill_blue.png'; // 기본값
+  };
+
   return (
     <div className={styles.container}>
       <nav className={styles.nav}>
@@ -460,6 +469,40 @@ export default function Home() {
                         style={{ width: sajuResult.characterSummary.element.includes('Water') ? '98%' : sajuResult.characterSummary.element.includes('Fire') ? '82%' : '70%', backgroundColor: '#00d2fc' }}
                       ></div>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 신령 전용 비술 스킬 슬롯 세트 */}
+              <div className={styles.skillContainer}>
+                <h3 className={styles.sectionTitle}>🔮 신내림 전용 비술 (Shamanic Skills)</h3>
+                <div className={styles.skillList}>
+                  <div className={styles.skillSlot}>
+                    <div className={styles.skillIconFrame}>
+                      <img 
+                        src={getSkillImage(sajuResult.characterSummary.element)} 
+                        alt="주력 비술" 
+                        className={styles.skillIcon}
+                      />
+                    </div>
+                    <span className={styles.skillName}>
+                      {sajuResult.characterSummary.element.includes('Fire') ? '지옥 화무(火舞)' : '저승 철검술'}
+                    </span>
+                    <span className={styles.skillType}>액티브 비술</span>
+                  </div>
+                  <div className={`${styles.skillSlot} ${styles.locked}`}>
+                    <div className={styles.skillIconFrame}>
+                      <div className={styles.lockOverlay}>🔒</div>
+                    </div>
+                    <span className={styles.skillName}>잠겨진 기운</span>
+                    <span className={styles.skillType}>봉인됨</span>
+                  </div>
+                  <div className={`${styles.skillSlot} ${styles.locked}`}>
+                    <div className={styles.skillIconFrame}>
+                      <div className={styles.lockOverlay}>🔒</div>
+                    </div>
+                    <span className={styles.skillName}>미확인 비술</span>
+                    <span className={styles.skillType}>봉인됨</span>
                   </div>
                 </div>
               </div>

@@ -655,30 +655,31 @@
   }
 }
 
-/* AI Pixel Character Visual Card Styles */
+/* AI Pixel Character Visual Card Styles - 통일된 테두리 정밀 강화 */
 .characterVisualCard {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 15, 30, 0.6);
-  border: 1px solid rgba(223, 178, 60, 0.15);
-  border-radius: 20px;
+  background: rgba(15, 15, 30, 0.7);
+  border: 4px double rgba(223, 178, 60, 0.4); /* 전통적인 이중 픽셀 보더 선언 */
+  border-radius: 12px;
   padding: 32px;
   margin-bottom: 8px;
-  box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(139, 92, 246, 0.15);
   animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .pixelFrame {
   position: relative;
   width: 100%;
-  max-width: 340px;
+  max-width: 320px;
   aspect-ratio: 1 / 1;
-  border-radius: 16px;
-  padding: 8px;
-  background: linear-gradient(135deg, #dfb23c 0%, #8b5cf6 50%, #06b6d4 100%);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(223, 178, 60, 0.3);
+  border-radius: 8px;
+  padding: 6px;
+  background: #000000; /* 외부 이미지가 갖는 지저분한 테두리를 잘라내기 위한 블랙 마스킹 */
+  border: 3px solid var(--gold); /* 황금빛 단단한 보더 */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(223, 178, 60, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -688,17 +689,16 @@
 .characterImage {
   width: 100%;
   height: 100%;
-  border-radius: 10px;
+  border-radius: 4px;
   object-fit: cover;
-  /* 도트의 예리하고 각진 레트로 느낌을 100% 살리는 모던 브라우저 옵션 */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
-  transition: transform 0.5s ease;
+  transform: scale(1.01); /* 모서리가 살짝 깨지는 현상 방지를 위해 미세 확대 */
+  transition: transform 0.4s ease;
 }
 
 .pixelFrame:hover .characterImage {
-  transform: scale(1.03);
+  transform: scale(1.05);
 }
 
 .visualMeta {
@@ -706,11 +706,11 @@
   align-items: center;
   gap: 8px;
   margin-top: 18px;
-  background: rgba(10, 10, 20, 0.8);
-  padding: 8px 20px;
-  border-radius: 30px;
-  border: 1px solid rgba(223, 178, 60, 0.3);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  background: rgba(10, 10, 20, 0.9);
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: 1px dashed rgba(223, 178, 60, 0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
 .visualText {
@@ -725,4 +725,92 @@
   color: #a855f7;
   font-size: 0.9rem;
   animation: pulse 1s infinite alternate;
+}
+
+/* Shamanic Skills - 콤팩트한 정사각형 스킬 슬롯 세트 */
+.skillContainer {
+  background: rgba(10, 10, 20, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: left;
+}
+
+.skillList {
+  display: flex;
+  gap: 20px;
+  justify-content: space-around;
+  margin-top: 16px;
+}
+
+.skillSlot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 16px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: all 0.3s ease;
+}
+
+.skillSlot:hover:not(.locked) {
+  background: rgba(223, 178, 60, 0.03);
+  border-color: rgba(223, 178, 60, 0.2);
+}
+
+.skillIconFrame {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  aspect-ratio: 1 / 1;
+  background: #080810;
+  border: 2px solid rgba(223, 178, 60, 0.3);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.skillIcon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.skillName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.skillType {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Locked Skill Style */
+.locked {
+  opacity: 0.45;
+}
+
+.lockOverlay {
+  font-size: 1.6rem;
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
 }
