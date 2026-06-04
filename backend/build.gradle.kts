@@ -29,6 +29,9 @@ dependencies {
     // MySQL
     runtimeOnly("com.mysql:mysql-connector-j")
 
+    // .env 자동 로드
+    implementation("me.paulschwarz:spring-dotenv:4.0.0")
+
     // Lombok
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
