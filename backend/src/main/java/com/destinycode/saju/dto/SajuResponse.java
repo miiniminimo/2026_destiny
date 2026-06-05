@@ -19,6 +19,7 @@ public class SajuResponse {
     private String birthTime;
     private String birthPlace;
     private String imageData;
+    private Boolean imageReady;   // 이미지 생성 완료 여부 (비동기)
     private CharacterSummary characterSummary;
 
     @Getter
@@ -44,6 +45,7 @@ public class SajuResponse {
                 .birthTime(info.getBirthTime())
                 .birthPlace(info.getBirthPlace())
                 .imageData(info.getImageData())
+                .imageReady(info.getImageReady())
                 .characterSummary(summary)
                 .build();
     }

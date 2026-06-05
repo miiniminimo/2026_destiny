@@ -32,6 +32,12 @@ dependencies {
     // .env 자동 로드
     implementation("me.paulschwarz:spring-dotenv:4.0.0")
 
+    // Swagger / OpenAPI
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+
+    // Rate Limiting
+    implementation("com.github.bucket4j:bucket4j-core:8.10.1")
+
     // Lombok
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

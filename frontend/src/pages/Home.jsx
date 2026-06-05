@@ -389,11 +389,6 @@ export default function Home() {
                     className={styles.characterImage}
                   />
                 </div>
-                <div className={styles.visualMeta}>
-                  <span className={styles.visualSparkle}>✨</span>
-                  <span className={styles.visualText}>AI 운명 연성 16비트 도트 캐릭터 외형</span>
-                  <span className={styles.visualSparkle}>✨</span>
-                </div>
               </div>
 
               {/* 캐릭터 세부 정보 시트 */}

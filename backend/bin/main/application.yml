@@ -24,5 +24,12 @@ ai:
   openai:
     api-key: ${OPENAI_API_KEY:}
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
 server:
   port: 8080

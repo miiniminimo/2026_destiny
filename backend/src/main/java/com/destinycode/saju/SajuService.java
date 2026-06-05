@@ -9,6 +9,7 @@ import com.destinycode.user.User;
 import com.destinycode.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +23,14 @@ public class SajuService {
     private final AnthropicService anthropicService;
     private final OpenAiService openAiService;
 
+    /**
+     * 사주 저장 + Claude 분석 → 즉시 응답
+     * DALL-E 이미지는 백그라운드에서 생성 후 DB 저장 (imageReady: false로 먼저 반환)
+     */
     @Transactional
     public SajuResponse saveSaju(String email, SajuRequest req) {
         User user = findUser(email);
 
-        // 기존 사주가 있으면 업데이트, 없으면 신규 생성
         SajuInfo info = sajuRepository.findByUser(user)
                 .orElse(SajuInfo.builder().user(user).build());
 
@@ -38,28 +42,22 @@ public class SajuService {
         info.setBirthDay(req.getBirthDay());
         info.setBirthTime(req.getBirthTime());
         info.setBirthPlace(req.getBirthPlace());
+        info.setImageReady(false); // 이미지 생성 전
 
-        // 오행/클래스 계산
-        CharacterMeta meta = resolveCharacterMeta(req);
-
-        // Claude로 캐릭터 설명 생성 (실패 시 기본 설명 사용)
-        String description = generateDescription(req, meta);
-
-        SajuResponse.CharacterSummary summary = SajuResponse.CharacterSummary.builder()
-                .element(meta.element())
-                .className(meta.className())
-                .title(meta.title())
-                .description(description)
-                .build();
-
-        // DALL-E 3 이미지 생성 (실패 시 null)
-        String image = openAiService.generateCharacterImage(
-                req.getName(), req.getGender(), meta.element(), meta.className(), meta.title()
+        CharacterMeta meta = buildMeta(req.getBirthYear(), req.getGender());
+        String description = generateDescription(
+                req.getName(), req.getGender(),
+                req.getBirthYear(), req.getBirthMonth(), req.getBirthDay(),
+                req.getBirthTime(), req.getBirthPlace(),
+                meta
         );
-        if (image != null) info.setImageData(image);
 
         SajuInfo saved = sajuRepository.save(info);
-        return SajuResponse.from(saved, summary);
+
+        // 이미지 생성은 백그라운드에서 (즉시 응답 후 처리)
+        generateAndSaveImageAsync(saved.getId(), req.getName(), req.getGender(), meta);
+
+        return SajuResponse.from(saved, toSummary(meta, description));
     }
 
     @Transactional(readOnly = true)
@@ -68,58 +66,71 @@ public class SajuService {
         SajuInfo info = sajuRepository.findByUser(user)
                 .orElseThrow(() -> BusinessException.notFound("사주 정보가 없습니다."));
 
-        CharacterMeta meta = resolveCharacterMetaFromInfo(info);
-        String description = generateDescriptionFromInfo(info, meta);
-
-        SajuResponse.CharacterSummary summary = SajuResponse.CharacterSummary.builder()
-                .element(meta.element())
-                .className(meta.className())
-                .title(meta.title())
-                .description(description)
-                .build();
-
-        return SajuResponse.from(info, summary);
+        CharacterMeta meta = buildMeta(info.getBirthYear(), info.getGender());
+        String description = generateDescription(
+                info.getName(), info.getGender(),
+                info.getBirthYear(), info.getBirthMonth(), info.getBirthDay(),
+                info.getBirthTime(), info.getBirthPlace(),
+                meta
+        );
+        return SajuResponse.from(info, toSummary(meta, description));
     }
 
-    // ─── 내부 헬퍼 ───────────────────────────────────────────────────────────────
+    // ─── 비동기 이미지 생성 ────────────────────────────────────────────────────
+
+    @Async("imageExecutor")
+    public void generateAndSaveImageAsync(Long sajuInfoId, String name, String gender, CharacterMeta meta) {
+        log.info("[Async] DALL-E 이미지 생성 시작 - sajuInfoId: {}", sajuInfoId);
+        try {
+            String base64Image = openAiService.generateCharacterImage(
+                    name, gender, meta.element(), meta.className(), meta.title()
+            );
+            if (base64Image != null) {
+                saveImage(sajuInfoId, base64Image);
+                log.info("[Async] DALL-E 이미지 저장 완료 - sajuInfoId: {}", sajuInfoId);
+            }
+        } catch (Exception e) {
+            log.error("[Async] DALL-E 이미지 생성 실패 - sajuInfoId: {}", sajuInfoId, e);
+        }
+    }
+
+    @Transactional
+    public void saveImage(Long sajuInfoId, String base64Image) {
+        sajuRepository.findById(sajuInfoId).ifPresent(info -> {
+            info.setImageData(base64Image);
+            info.setImageReady(true);
+            sajuRepository.save(info);
+        });
+    }
+
+    // ─── 내부 헬퍼 ────────────────────────────────────────────────────────────
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> BusinessException.notFound("사용자를 찾을 수 없습니다."));
     }
 
-    private String generateDescription(SajuRequest req, CharacterMeta meta) {
+    private String generateDescription(String name, String gender, int year, int month,
+                                        int day, String birthTime, String birthPlace,
+                                        CharacterMeta meta) {
         String aiDesc = anthropicService.generateSajuAnalysis(
-                req.getName(), req.getGender(),
-                String.valueOf(req.getBirthYear()), String.valueOf(req.getBirthMonth()),
-                String.valueOf(req.getBirthDay()), req.getBirthTime(),
-                req.getBirthPlace(), meta.element(), meta.className()
+                name, gender,
+                String.valueOf(year), String.valueOf(month), String.valueOf(day),
+                birthTime, birthPlace, meta.element(), meta.className()
         );
-        return aiDesc != null ? aiDesc : meta.fallbackDescription(req.getBirthTime(), req.getBirthPlace());
+        return aiDesc != null ? aiDesc : meta.fallbackDescription(birthTime, birthPlace);
     }
 
-    private String generateDescriptionFromInfo(SajuInfo info, CharacterMeta meta) {
-        String aiDesc = anthropicService.generateSajuAnalysis(
-                info.getName(), info.getGender(),
-                String.valueOf(info.getBirthYear()), String.valueOf(info.getBirthMonth()),
-                String.valueOf(info.getBirthDay()), info.getBirthTime(),
-                info.getBirthPlace(), meta.element(), meta.className()
-        );
-        return aiDesc != null ? aiDesc : meta.fallbackDescription(info.getBirthTime(), info.getBirthPlace());
+    private SajuResponse.CharacterSummary toSummary(CharacterMeta meta, String description) {
+        return SajuResponse.CharacterSummary.builder()
+                .element(meta.element())
+                .className(meta.className())
+                .title(meta.title())
+                .description(description)
+                .build();
     }
 
-    private CharacterMeta resolveCharacterMeta(SajuRequest req) {
-        return buildMeta(req.getBirthYear(), req.getGender());
-    }
-
-    private CharacterMeta resolveCharacterMetaFromInfo(SajuInfo info) {
-        return buildMeta(info.getBirthYear(), info.getGender());
-    }
-
-    /**
-     * 태어난 연도 끝자리 + 성별로 오행/클래스/타이틀 결정
-     */
-    private CharacterMeta buildMeta(int birthYear, String gender) {
+    CharacterMeta buildMeta(int birthYear, String gender) {
         boolean male = "MALE".equals(gender);
         return switch (birthYear % 10) {
             case 0, 1 -> new CharacterMeta(
@@ -155,10 +166,7 @@ public class SajuService {
         };
     }
 
-    /**
-     * 캐릭터 기본 메타데이터 (AI 설명 실패 시 fallback 포함)
-     */
-    private record CharacterMeta(String element, String className, String title, String baseDesc) {
+    record CharacterMeta(String element, String className, String title, String baseDesc) {
         String fallbackDescription(String birthTime, String birthPlace) {
             String timeNote = birthTime != null
                     ? " 태어난 시각 " + birthTime + "의 천간 기운이 능력에 스며들었습니다."

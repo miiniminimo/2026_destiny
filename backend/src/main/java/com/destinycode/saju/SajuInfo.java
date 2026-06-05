@@ -27,10 +27,10 @@ public class SajuInfo {
     private String name;
 
     @Column(nullable = false)
-    private String gender; // MALE, FEMALE
+    private String gender;
 
     @Column(name = "calendar_type", nullable = false)
-    private String calendarType; // SOLAR, LUNAR_PLAIN, LUNAR_LEAP
+    private String calendarType;
 
     @Column(name = "birth_year", nullable = false)
     private Integer birthYear;
@@ -42,7 +42,7 @@ public class SajuInfo {
     private Integer birthDay;
 
     @Column(name = "birth_time")
-    private String birthTime; // "HH:mm" 포맷, 모를 경우 null
+    private String birthTime;
 
     @Column(name = "birth_place", nullable = false)
     private String birthPlace;
@@ -50,6 +50,11 @@ public class SajuInfo {
     @Lob
     @Column(name = "image_data", columnDefinition = "LONGTEXT")
     private String imageData;
+
+    /** DALL-E 이미지 생성 완료 여부 (비동기 처리) */
+    @Column(name = "image_ready", nullable = false)
+    @Builder.Default
+    private Boolean imageReady = false;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
