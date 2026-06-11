@@ -3,6 +3,8 @@ package com.destinycode.saju.dto;
 import com.destinycode.saju.SajuInfo;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,6 +33,8 @@ public class SajuResponse {
         private String className;
         private String title;
         private String description;
+        private String pillars;
+        private List<String> shenSha;
     }
 
     public static SajuResponse from(SajuInfo info, CharacterSummary summary) {

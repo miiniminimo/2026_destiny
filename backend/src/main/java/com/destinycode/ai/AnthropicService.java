@@ -1,5 +1,6 @@
 package com.destinycode.ai;
 
+import com.destinycode.saju.SajuPillars;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,8 @@ public class AnthropicService {
      */
     public String generateSajuAnalysis(String name, String gender, String birthYear,
                                        String birthMonth, String birthDay, String birthTime,
-                                       String birthPlace, String element, String className) {
+                                       String birthPlace, String element, String className,
+                                       SajuPillars pillars) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("ANTHROPIC_API_KEY가 설정되지 않아 기본 설명을 사용합니다.");
             return null;
@@ -41,8 +43,13 @@ public class AnthropicService {
         String genderKr = gender.equals("MALE") ? "남성" : "여성";
         String timeText = birthTime != null ? birthTime + "시" : "시간 미상";
 
+        String pillarsText = pillars.yearPillar() + " " + pillars.monthPillar() + " " + pillars.dayPillar()
+                + (pillars.timePillar() != null ? " " + pillars.timePillar() : " (시주 미상)");
+        String shenShaText = pillars.shenSha().isEmpty() ? "없음" : String.join(", ", pillars.shenSha());
+
         String prompt = String.format("""
                 아래 사주 정보를 바탕으로 한국의 전통 무속 세계관과 RPG 게임 언어를 결합한 캐릭터 설명을 작성해주세요.
+                이 정보는 만세력 기준으로 정확히 산출된 사주팔자이니, 아래 수치를 반드시 반영해 묘사하세요.
 
                 [사주 정보]
                 - 이름: %s
@@ -50,18 +57,23 @@ public class AnthropicService {
                 - 생년월일: %s년 %s월 %s일
                 - 태어난 시간: %s
                 - 태어난 장소: %s
-                - 오행 속성: %s
+                - 오행 속성(일간 기준): %s
                 - 직업 클래스: %s
+                - 사주팔자 (년주 월주 일주 시주): %s
+                - 일간(日干, 본질): %s
+                - 일주 지세(十二運星): %s
+                - 신살/귀성: %s
 
                 [작성 규칙]
                 1. 200자 내외로 간결하게 작성
-                2. 사주의 천간지지(天干地支) 기운을 게임 스탯 언어로 표현
+                2. 사주팔자(년주/월주/일주/시주)와 일간, 십이운성 기운을 게임 스탯 언어로 표현
                 3. K-POP 아이돌처럼 매력적이고 화려한 묘사 포함
-                4. 무속적 능력(퇴마, 치유, 소환 등)을 RPG 스킬로 표현
+                4. 신살/귀성이 있다면 각각을 무속적 RPG 스킬(퇴마, 치유, 소환 등)로 변환해 묘사. 없다면 일간의 기운을 스킬로 표현
                 5. 마크다운 없이 순수 텍스트로만 작성
 
                 캐릭터 설명:
-                """, name, genderKr, birthYear, birthMonth, birthDay, timeText, birthPlace, element, className);
+                """, name, genderKr, birthYear, birthMonth, birthDay, timeText, birthPlace, element, className,
+                pillarsText, pillars.dayGan(), pillars.dayJiSe(), shenShaText);
 
         try {
             HttpHeaders headers = new HttpHeaders();
