@@ -115,7 +115,7 @@ public class SajuService {
                 req.getName(), req.getGender(),
                 String.valueOf(req.getBirthYear()), String.valueOf(req.getBirthMonth()),
                 String.valueOf(req.getBirthDay()), req.getBirthTime(),
-                req.getBirthPlace(), cr.element(), cr.className()
+                req.getBirthPlace(), cr.element(), cr.className(), cr.title()
         );
         return aiDesc != null ? aiDesc : buildFallback(cr, req.getBirthTime(), req.getBirthPlace());
     }
@@ -125,7 +125,7 @@ public class SajuService {
                 info.getName(), info.getGender(),
                 String.valueOf(info.getBirthYear()), String.valueOf(info.getBirthMonth()),
                 String.valueOf(info.getBirthDay()), info.getBirthTime(),
-                info.getBirthPlace(), cr.element(), cr.className()
+                info.getBirthPlace(), cr.element(), cr.className(), cr.title()
         );
         return aiDesc != null ? aiDesc : buildFallback(cr, info.getBirthTime(), info.getBirthPlace());
     }
