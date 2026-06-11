@@ -1,5 +1,6 @@
 package com.destinycode.ai;
 
+import com.destinycode.saju.SajuPillars;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,8 @@ public class AnthropicService {
     public String generateSajuAnalysis(String name, String gender,
                                         String birthYear, String birthMonth, String birthDay,
                                         String birthTime, String birthPlace,
-                                        String element, String className, String title) {
+                                        String element, String className, String title,
+                                        SajuPillars pillars) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("ANTHROPIC_API_KEY가 설정되지 않아 기본 설명을 사용합니다.");
             return null;
@@ -47,7 +49,7 @@ public class AnthropicService {
         String timeText  = birthTime != null ? birthTime + "시" : "시간 미상";
 
         String prompt = buildPrompt(name, genderKr, birthYear, birthMonth, birthDay,
-                                    timeText, birthPlace, element, className, title);
+                                    timeText, birthPlace, element, className, title, pillars);
         log.info("Anthropic API 호출 - 클래스: {}", className);
 
         try {
@@ -81,7 +83,12 @@ public class AnthropicService {
     private String buildPrompt(String name, String genderKr,
                                 String year, String month, String day,
                                 String time, String place,
-                                String element, String className, String title) {
+                                String element, String className, String title,
+                                SajuPillars pillars) {
+        String pillarsText = pillars.yearPillar() + " " + pillars.monthPillar() + " " + pillars.dayPillar()
+                + (pillars.timePillar() != null ? " " + pillars.timePillar() : " (시주 미상)");
+        String shenShaText = pillars.shenSha().isEmpty() ? "없음" : String.join(", ", pillars.shenSha());
+
         return String.format("""
 당신은 한국 전통 무속·사주 세계관과 현대 K-POP 판타지 RPG를 결합한 캐릭터 시트를 작성하는 전문가입니다.
 
@@ -90,12 +97,16 @@ public class AnthropicService {
 - 성별: %s
 - 생년월일: %s년 %s월 %s일 %s
 - 출생지: %s
-- 오행/음양: %s
+- 오행/음양 (일간 기준): %s
 - 직업 클래스: %s
 - 칭호: %s
+- 사주팔자 (년주 월주 일주 시주, 만세력 기준): %s
+- 일간(日干, 본질): %s
+- 일주 지세(十二運星): %s
+- 신살/귀성: %s
 
 위 정보를 바탕으로 아래 형식을 **정확히** 지켜 캐릭터 프로필을 작성하세요.
-각 항목은 실제 사주 해석(오행 상생상극, 천간지지의 기운)을 최대한 반영해 구체적으로 써야 합니다.
+각 항목은 위에 주어진 사주팔자, 일간, 십이운성, 신살/귀성 정보를 최대한 구체적으로 반영해야 합니다.
 
 ---
 
@@ -110,12 +121,12 @@ public class AnthropicService {
 ✨ 도화력(桃花力): XX / 100  ← 매력·카리스마 수치
 
 【대표 스킬 3개】
-1. [스킬명] — 스킬 설명 (오행 기운과 클래스에 맞는 구체적 효과 1~2문장)
+1. [스킬명] — 스킬 설명 (신살/귀성이 있다면 그것을 무속적 RPG 스킬로, 없다면 일간·십이운성 기운을 스킬로 변환해 1~2문장으로 설명)
 2. [스킬명] — 스킬 설명
 3. [스킬명] — 스킬 설명
 
 【성격 및 기질】
-(천간의 음양과 계절의 기운을 반영한 성격 묘사. 장점 2가지, 단점 1가지를 자연스럽게 녹여서 2~3문장.)
+(천간의 음양과 월지 오행의 기운을 반영한 성격 묘사. 장점 2가지, 단점 1가지를 자연스럽게 녹여서 2~3문장.)
 
 【선천적 운명】
 (이 사주를 가진 사람이 타고난 사명과 시련. 오행 상생상극 관계를 스토리텔링으로 풀어서 2~3문장.)
@@ -123,6 +134,7 @@ public class AnthropicService {
 ---
 마크다운 없이 위 양식 그대로 출력하세요. 수치는 오행 속성과 클래스 특성에 맞게 반드시 다르게 설정하세요.
 """,
-                name, genderKr, year, month, day, time, place, element, className, title);
+                name, genderKr, year, month, day, time, place, element, className, title,
+                pillarsText, pillars.dayGan(), pillars.dayJiSe(), shenShaText);
     }
 }

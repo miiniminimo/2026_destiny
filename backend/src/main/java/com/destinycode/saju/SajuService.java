@@ -22,6 +22,7 @@ public class SajuService {
     private final UserRepository userRepository;
     private final AnthropicService anthropicService;
     private final OpenAiService openAiService;
+    private final SajuCalculator sajuCalculator;
     private final CharacterClassResolver classResolver;
 
     /**
@@ -45,19 +46,19 @@ public class SajuService {
         info.setBirthPlace(req.getBirthPlace());
         info.setImageReady(false);
 
-        CharacterClassResolver.ClassResult classResult = classResolver.resolve(
-                req.getBirthYear(), req.getBirthMonth(), req.getBirthDay(),
-                "MALE".equals(req.getGender())
+        SajuPillars pillars = sajuCalculator.calculate(
+                req.getCalendarType(), req.getBirthYear(), req.getBirthMonth(), req.getBirthDay(), req.getBirthTime()
         );
+        CharacterClassResolver.ClassResult classResult = classResolver.resolve(pillars, "MALE".equals(req.getGender()));
 
-        String description = generateDescription(req, classResult);
+        String description = generateDescription(req, pillars, classResult);
 
         SajuInfo saved = sajuRepository.save(info);
 
         generateAndSaveImageAsync(saved.getId(), req.getName(), req.getGender(),
                 classResult.element(), classResult.className(), classResult.title());
 
-        return SajuResponse.from(saved, toSummary(classResult, description));
+        return SajuResponse.from(saved, toSummary(pillars, classResult, description));
     }
 
     @Transactional(readOnly = true)
@@ -66,13 +67,13 @@ public class SajuService {
         SajuInfo info = sajuRepository.findByUser(user)
                 .orElseThrow(() -> BusinessException.notFound("사주 정보가 없습니다."));
 
-        CharacterClassResolver.ClassResult classResult = classResolver.resolve(
-                info.getBirthYear(), info.getBirthMonth(), info.getBirthDay(),
-                "MALE".equals(info.getGender())
+        SajuPillars pillars = sajuCalculator.calculate(
+                info.getCalendarType(), info.getBirthYear(), info.getBirthMonth(), info.getBirthDay(), info.getBirthTime()
         );
+        CharacterClassResolver.ClassResult classResult = classResolver.resolve(pillars, "MALE".equals(info.getGender()));
 
-        String description = generateDescriptionFromInfo(info, classResult);
-        return SajuResponse.from(info, toSummary(classResult, description));
+        String description = generateDescriptionFromInfo(info, pillars, classResult);
+        return SajuResponse.from(info, toSummary(pillars, classResult, description));
     }
 
     // ─── 비동기 이미지 생성 ────────────────────────────────────────────────────
@@ -110,22 +111,22 @@ public class SajuService {
                 .orElseThrow(() -> BusinessException.notFound("사용자를 찾을 수 없습니다."));
     }
 
-    private String generateDescription(SajuRequest req, CharacterClassResolver.ClassResult cr) {
+    private String generateDescription(SajuRequest req, SajuPillars pillars, CharacterClassResolver.ClassResult cr) {
         String aiDesc = anthropicService.generateSajuAnalysis(
                 req.getName(), req.getGender(),
                 String.valueOf(req.getBirthYear()), String.valueOf(req.getBirthMonth()),
                 String.valueOf(req.getBirthDay()), req.getBirthTime(),
-                req.getBirthPlace(), cr.element(), cr.className(), cr.title()
+                req.getBirthPlace(), cr.element(), cr.className(), cr.title(), pillars
         );
         return aiDesc != null ? aiDesc : buildFallback(cr, req.getBirthTime(), req.getBirthPlace());
     }
 
-    private String generateDescriptionFromInfo(SajuInfo info, CharacterClassResolver.ClassResult cr) {
+    private String generateDescriptionFromInfo(SajuInfo info, SajuPillars pillars, CharacterClassResolver.ClassResult cr) {
         String aiDesc = anthropicService.generateSajuAnalysis(
                 info.getName(), info.getGender(),
                 String.valueOf(info.getBirthYear()), String.valueOf(info.getBirthMonth()),
                 String.valueOf(info.getBirthDay()), info.getBirthTime(),
-                info.getBirthPlace(), cr.element(), cr.className(), cr.title()
+                info.getBirthPlace(), cr.element(), cr.className(), cr.title(), pillars
         );
         return aiDesc != null ? aiDesc : buildFallback(cr, info.getBirthTime(), info.getBirthPlace());
     }
@@ -138,12 +139,17 @@ public class SajuService {
                 + birthPlace + "의 영산 기운이 모태에 스며들어 직업 시너지가 활성화되었습니다.";
     }
 
-    private SajuResponse.CharacterSummary toSummary(CharacterClassResolver.ClassResult cr, String description) {
+    private SajuResponse.CharacterSummary toSummary(SajuPillars pillars, CharacterClassResolver.ClassResult cr, String description) {
+        String pillarsText = pillars.yearPillar() + " " + pillars.monthPillar() + " " + pillars.dayPillar()
+                + (pillars.timePillar() != null ? " " + pillars.timePillar() : " (시주 미상)");
+
         return SajuResponse.CharacterSummary.builder()
                 .element(cr.element())
                 .className(cr.className())
                 .title(cr.title())
                 .description(description)
+                .pillars(pillarsText)
+                .shenSha(cr.shenSha())
                 .build();
     }
 }

@@ -36,7 +36,10 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
     // Rate Limiting
-    implementation("com.github.bucket4j:bucket4j-core:8.10.1")
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
+
+    // 만세력 (음양력 변환, 사주팔자, 60갑자)
+    implementation("cn.6tail:lunar:1.7.7")
 
     // Lombok
     compileOnly("org.projectlombok:lombok")
