@@ -42,4 +42,7 @@ public class SajuRequest {
 
     @NotBlank(message = "태어난 장소는 필수 항목입니다.")
     private String birthPlace;
+
+    // 미리보기에서 이미 생성된 이미지를 저장 시 그대로 재사용하기 위한 값 (선택)
+    private String imageData;
 }

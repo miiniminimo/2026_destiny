@@ -53,4 +53,21 @@ public class SajuResponse {
                 .characterSummary(summary)
                 .build();
     }
+
+    public static SajuResponse fromPreview(SajuRequest req, CharacterSummary summary, String imageData) {
+        return SajuResponse.builder()
+                .id(null)
+                .name(req.getName())
+                .gender(req.getGender())
+                .calendarType(req.getCalendarType())
+                .birthYear(req.getBirthYear())
+                .birthMonth(req.getBirthMonth())
+                .birthDay(req.getBirthDay())
+                .birthTime(req.getBirthTime())
+                .birthPlace(req.getBirthPlace())
+                .imageData(imageData)
+                .imageReady(imageData != null)
+                .characterSummary(summary)
+                .build();
+    }
 }

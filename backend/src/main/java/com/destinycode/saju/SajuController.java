@@ -22,6 +22,15 @@ public class SajuController {
 
     private final SajuService sajuService;
 
+    @Operation(summary = "사주 미리보기",
+               description = "DB에 저장하지 않고 Claude 분석 결과만 즉시 응답. 사용자가 저장 버튼을 누르면 /api/saju로 실제 저장")
+    @PostMapping("/preview")
+    public ResponseEntity<ApiResponse<SajuResponse>> previewSaju(
+            @Valid @RequestBody SajuRequest request) {
+        SajuResponse response = sajuService.previewSaju(request);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     @Operation(summary = "사주 저장 및 캐릭터 생성",
                description = "사주 정보를 저장하고 Claude 분석 후 즉시 응답. 이미지는 백그라운드 생성 (imageReady: false → true)")
     @PostMapping

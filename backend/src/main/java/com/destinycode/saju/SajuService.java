@@ -26,6 +26,25 @@ public class SajuService {
     private final CharacterClassResolver classResolver;
 
     /**
+     * 사주 미리보기 - DB에 저장하지 않고 Claude 분석 + DALL-E 이미지를 즉시 응답
+     * 사용자가 "저장" 버튼을 눌러야 saveSaju()로 실제 저장됨
+     */
+    public SajuResponse previewSaju(SajuRequest req) {
+        SajuPillars pillars = sajuCalculator.calculate(
+                req.getCalendarType(), req.getBirthYear(), req.getBirthMonth(), req.getBirthDay(), req.getBirthTime()
+        );
+        CharacterClassResolver.ClassResult classResult = classResolver.resolve(pillars, "MALE".equals(req.getGender()));
+
+        String description = generateDescription(req, pillars, classResult);
+
+        String imageData = openAiService.generateCharacterImage(
+                req.getName(), req.getGender(), classResult.element(), classResult.className(), classResult.title(), description
+        );
+
+        return SajuResponse.fromPreview(req, toSummary(pillars, classResult, description), imageData);
+    }
+
+    /**
      * 사주 저장 + Claude 분석 → 즉시 응답
      * DALL-E 이미지는 백그라운드에서 생성 후 DB 저장
      */
@@ -44,8 +63,6 @@ public class SajuService {
         info.setBirthDay(req.getBirthDay());
         info.setBirthTime(req.getBirthTime());
         info.setBirthPlace(req.getBirthPlace());
-        info.setImageReady(false);
-
         SajuPillars pillars = sajuCalculator.calculate(
                 req.getCalendarType(), req.getBirthYear(), req.getBirthMonth(), req.getBirthDay(), req.getBirthTime()
         );
@@ -53,10 +70,21 @@ public class SajuService {
 
         String description = generateDescription(req, pillars, classResult);
 
+        if (req.getImageData() != null && !req.getImageData().isBlank()) {
+            // 미리보기에서 이미 생성된 이미지를 그대로 저장 (재생성 비용 방지)
+            info.setImageData(req.getImageData());
+            info.setImageReady(true);
+            SajuInfo saved = sajuRepository.save(info);
+            return SajuResponse.from(saved, toSummary(pillars, classResult, description));
+        }
+
+        info.setImageReady(false);
+        info.setImageData(null);
+
         SajuInfo saved = sajuRepository.save(info);
 
         generateAndSaveImageAsync(saved.getId(), req.getName(), req.getGender(),
-                classResult.element(), classResult.className(), classResult.title());
+                classResult.element(), classResult.className(), classResult.title(), description);
 
         return SajuResponse.from(saved, toSummary(pillars, classResult, description));
     }
@@ -80,11 +108,11 @@ public class SajuService {
 
     @Async("imageExecutor")
     public void generateAndSaveImageAsync(Long sajuInfoId, String name, String gender,
-                                           String element, String className, String title) {
+                                           String element, String className, String title, String description) {
         log.info("[Async] DALL-E 이미지 생성 시작 - sajuInfoId: {}", sajuInfoId);
         try {
             String base64Image = openAiService.generateCharacterImage(
-                    name, gender, element, className, title
+                    name, gender, element, className, title, description
             );
             if (base64Image != null) {
                 saveImage(sajuInfoId, base64Image);
@@ -112,31 +140,21 @@ public class SajuService {
     }
 
     private String generateDescription(SajuRequest req, SajuPillars pillars, CharacterClassResolver.ClassResult cr) {
-        String aiDesc = anthropicService.generateSajuAnalysis(
+        return anthropicService.generateSajuAnalysis(
                 req.getName(), req.getGender(),
                 String.valueOf(req.getBirthYear()), String.valueOf(req.getBirthMonth()),
                 String.valueOf(req.getBirthDay()), req.getBirthTime(),
                 req.getBirthPlace(), cr.element(), cr.className(), cr.title(), pillars
         );
-        return aiDesc != null ? aiDesc : buildFallback(cr, req.getBirthTime(), req.getBirthPlace());
     }
 
     private String generateDescriptionFromInfo(SajuInfo info, SajuPillars pillars, CharacterClassResolver.ClassResult cr) {
-        String aiDesc = anthropicService.generateSajuAnalysis(
+        return anthropicService.generateSajuAnalysis(
                 info.getName(), info.getGender(),
                 String.valueOf(info.getBirthYear()), String.valueOf(info.getBirthMonth()),
                 String.valueOf(info.getBirthDay()), info.getBirthTime(),
                 info.getBirthPlace(), cr.element(), cr.className(), cr.title(), pillars
         );
-        return aiDesc != null ? aiDesc : buildFallback(cr, info.getBirthTime(), info.getBirthPlace());
-    }
-
-    private String buildFallback(CharacterClassResolver.ClassResult cr, String birthTime, String birthPlace) {
-        String timeNote = birthTime != null
-                ? " " + birthTime + "에 태어나 시간의 천간 기운이 능력에 스며들었습니다."
-                : " 태어난 시간이 신비로운 안개에 싸여 변칙 영력을 지니게 되었습니다.";
-        return cr.baseDescription() + timeNote + " "
-                + birthPlace + "의 영산 기운이 모태에 스며들어 직업 시너지가 활성화되었습니다.";
     }
 
     private SajuResponse.CharacterSummary toSummary(SajuPillars pillars, CharacterClassResolver.ClassResult cr, String description) {

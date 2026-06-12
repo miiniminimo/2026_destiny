@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from '../api/axios'
 import styles from './Home.module.css'
 
 export default function Home() {
-  const { user, logout, deleteAccount } = useAuth()
+  const { user, login, signup, logout, deleteAccount } = useAuth()
   const navigate = useNavigate()
-  
-  // 상태 변수들
-  const [step, setStep] = useState('checking') // checking, input, loading, result
+
+  // 상태 변수들 - 기본 화면은 입력 화면 (비로그인 사용자도 입력 가능)
+  const [step, setStep] = useState('input') // input, loading, result
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [loadingTextIndex, setLoadingTextIndex] = useState(0)
   const [apiError, setApiError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // 로그인/회원가입 모달 (저장 시 비로그인 상태일 때 표시)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMode, setAuthMode] = useState('login') // login, signup
+  const [authForm, setAuthForm] = useState({ email: '', password: '', nickname: '' })
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
 
   // 사주 입력 폼 상태
   const [form, setForm] = useState({
@@ -31,6 +38,10 @@ export default function Home() {
 
   // 백엔드에서 받아온 사주 및 캐릭터 정보
   const [sajuResult, setSajuResult] = useState(null)
+  const [lastPayload, setLastPayload] = useState(null)
+  const [isSaved, setIsSaved] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   // 신비로운 로딩 문구들
   const loadingTexts = [
@@ -53,25 +64,6 @@ export default function Home() {
     }
     return () => clearInterval(interval)
   }, [step])
-
-  // 기존에 저장된 사용자의 사주 데이터가 있는지 조회
-  useEffect(() => {
-    const fetchSajuInfo = async () => {
-      try {
-        const response = await api.get('/saju/me')
-        if (response.status === 200 && response.data) {
-          setSajuResult(response.data)
-          setStep('result')
-        } else {
-          setStep('input')
-        }
-      } catch (err) {
-        // 데이터가 없거나(204 No Content) 에러인 경우 입력 폼 표시
-        setStep('input')
-      }
-    }
-    fetchSajuInfo()
-  }, [])
 
   const handleLogout = async () => {
     await logout()
@@ -117,12 +109,15 @@ export default function Home() {
     const startTime = Date.now()
 
     try {
-      const response = await api.post('/saju', payload)
+      const response = await api.post('/saju/preview', payload)
       const elapsedTime = Date.now() - startTime
       const remainingTime = Math.max(0, 5000 - elapsedTime)
 
       setTimeout(() => {
         setSajuResult(response.data)
+        setLastPayload({ ...payload, imageData: response.data.imageData })
+        setIsSaved(false)
+        setSaveError('')
         setStep('result')
         setIsSubmitting(false)
       }, remainingTime)
@@ -131,6 +126,56 @@ export default function Home() {
       setStep('input')
       setIsSubmitting(false)
       setApiError(err.response?.data?.message || '사주 분석 요청 중 오류가 발생했습니다.')
+    }
+  }
+
+  const doSave = async () => {
+    if (!lastPayload) return
+    setIsSaving(true)
+    setSaveError('')
+    try {
+      const response = await api.post('/saju', lastPayload)
+      setSajuResult(response.data)
+      setIsSaved(true)
+    } catch (err) {
+      setSaveError(err.message || '저장 중 오류가 발생했습니다.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSave = () => {
+    if (!user) {
+      setAuthError('')
+      setAuthMode('login')
+      setShowAuthModal(true)
+      return
+    }
+    doSave()
+  }
+
+  const handleAuthChange = (e) => {
+    const { name, value } = e.target
+    setAuthForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault()
+    setAuthError('')
+    setAuthLoading(true)
+    try {
+      if (authMode === 'login') {
+        await login(authForm.email, authForm.password)
+      } else {
+        await signup(authForm.email, authForm.password, authForm.nickname)
+      }
+      setShowAuthModal(false)
+      setAuthForm({ email: '', password: '', nickname: '' })
+      await doSave()
+    } catch (err) {
+      setAuthError(err.message || '인증 중 오류가 발생했습니다.')
+    } finally {
+      setAuthLoading(false)
     }
   }
 
@@ -146,49 +191,52 @@ export default function Home() {
     "전북", "전남", "광주", "경북", "경남", "대구", "울산", "부산", "제주", "해외"
   ]
 
-  // 오행 속성에 부합하는 AI 연성 도트 그래픽 매핑
-  const getCharacterImage = (element) => {
-    if (sajuResult && sajuResult.imageData) {
-      return sajuResult.imageData;
+  // AI가 생성한 운명 분석 텍스트를 【제목】 단위 섹션으로 분리
+  const parseDestinyReport = (description) => {
+    if (!description) return []
+    const sections = []
+    const regex = /【([^】]+)】/g
+    let match
+    let lastTitle = null
+    let lastIndex = 0
+    while ((match = regex.exec(description)) !== null) {
+      if (lastTitle !== null) {
+        sections.push({ title: lastTitle, body: description.slice(lastIndex, match.index).trim() })
+      }
+      lastTitle = match[1]
+      lastIndex = regex.lastIndex
     }
-    if (!element) return '/pixel_gold_knight.png';
-    if (element.includes('Fire')) return '/pixel_fire_mage.png';
-    if (element.includes('Metal')) return '/pixel_gold_knight.png';
-    if (element.includes('Water')) return '/pixel_fire_mage.png'; // 대체 자원
-    return '/pixel_gold_knight.png'; // 기본값
-  };
-
-  // 각 속성에 해당하는 정사각형 스킬 아이콘 매칭
-  const getSkillImage = (element) => {
-    if (!element) return '/pixel_skill_blue.png';
-    if (element.includes('Fire')) return '/pixel_skill_fire.png';
-    if (element.includes('Metal')) return '/pixel_skill_blue.png';
-    if (element.includes('Water')) return '/pixel_skill_fire.png'; // 대체 자원
-    return '/pixel_skill_blue.png'; // 기본값
-  };
+    if (lastTitle !== null) {
+      sections.push({ title: lastTitle, body: description.slice(lastIndex).trim() })
+    } else {
+      sections.push({ title: null, body: description.trim() })
+    }
+    return sections
+  }
 
   return (
     <div className={styles.container}>
       <nav className={styles.nav}>
         <span className={styles.logo}>⚔️ DestinyCode</span>
         <div className={styles.navRight}>
-          <span className={styles.nickname}>{user?.nickname} 님</span>
-          <button onClick={handleLogout} className={styles.btnOutline}>
-            로그아웃
-          </button>
+          {user ? (
+            <>
+              <span className={styles.nickname}>{user.nickname} 님</span>
+              <button onClick={handleLogout} className={styles.btnOutline}>
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className={styles.btnOutline}>로그인</Link>
+              <Link to="/signup" className={styles.btnOutline}>회원가입</Link>
+            </>
+          )}
         </div>
       </nav>
 
       <main className={styles.main}>
-        {/* 1단계: 사용자 정보 조회 중 */}
-        {step === 'checking' && (
-          <div className={styles.checkingContainer}>
-            <div className={styles.spinner}></div>
-            <p>운명의 기록을 조회하고 있습니다...</p>
-          </div>
-        )}
-
-        {/* 2단계: 사주 정보 입력 폼 */}
+        {/* 1단계: 사주 정보 입력 폼 */}
         {step === 'input' && (
           <div className={styles.inputCard}>
             <h2 className={styles.heading}>✨ 나의 운명 캐릭터 생성</h2>
@@ -380,15 +428,23 @@ export default function Home() {
             </div>
 
             <div className={styles.cardBody}>
-              {/* AI 연성 도트 캐릭터 비주얼 카드 */}
+              {/* AI 연성 캐릭터 비주얼 카드 */}
               <div className={styles.characterVisualCard}>
-                <div className={styles.pixelFrame}>
-                  <img 
-                    src={getCharacterImage(sajuResult.characterSummary.element)} 
-                    alt="AI 연성 도트 영웅" 
-                    className={styles.characterImage}
-                  />
-                </div>
+                {sajuResult.imageReady && sajuResult.imageData ? (
+                  <div className={styles.aiPortraitFrame}>
+                    <img
+                      src={sajuResult.imageData}
+                      alt="내가 신이라면? AI 캐릭터 일러스트"
+                      className={styles.aiPortraitImage}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.aiPortraitFrame}>
+                    <p className={styles.imagePlaceholder}>
+                      🌫️ 이미지 생성에 실패했습니다.<br />다시 시도해주세요.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* 캐릭터 세부 정보 시트 */}
@@ -423,99 +479,38 @@ export default function Home() {
               {/* 운명 분석 및 스토리 설명 */}
               <div className={styles.characterStory}>
                 <h3 className={styles.sectionTitle}>🛡️ 모험가 운명서 (Destiny Story)</h3>
-                <p className={styles.storyText}>{sajuResult.characterSummary.description}</p>
+                {sajuResult.characterSummary.description ? (
+                  parseDestinyReport(sajuResult.characterSummary.description).map((section, idx) => (
+                    <div key={idx} className={styles.storySection}>
+                      {section.title && <h4 className={styles.storySectionTitle}>{section.title}</h4>}
+                      <p className={styles.storyText}>{section.body}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className={styles.storyText}>🌫️ 운명 분석에 실패했습니다. 다시 시도해주세요.</p>
+                )}
               </div>
 
-              {/* 캐릭터 스탯 시각화 (오행 기반 재미로 보는 기운 수치) */}
-              <div className={styles.statsContainer}>
-                <h3 className={styles.sectionTitle}>⚡ 영혼의 기본 능력치 (Destiny Stats)</h3>
-                <div className={styles.statList}>
-                  <div className={styles.statItem}>
-                    <div className={styles.statInfo}>
-                      <span>체력 (Earth)</span>
-                      <span>{sajuResult.characterSummary.element.includes('Earth') ? '92' : sajuResult.characterSummary.element.includes('Metal') ? '80' : '65'}</span>
-                    </div>
-                    <div className={styles.statBarContainer}>
-                      <div 
-                        className={styles.statBarFill} 
-                        style={{ width: sajuResult.characterSummary.element.includes('Earth') ? '92%' : sajuResult.characterSummary.element.includes('Metal') ? '80%' : '65%' }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className={styles.statItem}>
-                    <div className={styles.statInfo}>
-                      <span>공격력 (Fire)</span>
-                      <span>{sajuResult.characterSummary.element.includes('Fire') ? '95' : sajuResult.characterSummary.element.includes('Wood') ? '78' : '68'}</span>
-                    </div>
-                    <div className={styles.statBarContainer}>
-                      <div 
-                        className={styles.statBarFill} 
-                        style={{ width: sajuResult.characterSummary.element.includes('Fire') ? '95%' : sajuResult.characterSummary.element.includes('Wood') ? '78%' : '68%', backgroundColor: '#ff4d4d' }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className={styles.statItem}>
-                    <div className={styles.statInfo}>
-                      <span>마력 (Water)</span>
-                      <span>{sajuResult.characterSummary.element.includes('Water') ? '98' : sajuResult.characterSummary.element.includes('Fire') ? '82' : '70'}</span>
-                    </div>
-                    <div className={styles.statBarContainer}>
-                      <div 
-                        className={styles.statBarFill} 
-                        style={{ width: sajuResult.characterSummary.element.includes('Water') ? '98%' : sajuResult.characterSummary.element.includes('Fire') ? '82%' : '70%', backgroundColor: '#00d2fc' }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 신령 전용 비술 스킬 슬롯 세트 */}
-              <div className={styles.skillContainer}>
-                <h3 className={styles.sectionTitle}>🔮 신내림 전용 비술 (Shamanic Skills)</h3>
-                <div className={styles.skillList}>
-                  <div className={styles.skillSlot}>
-                    <div className={styles.skillIconFrame}>
-                      <img 
-                        src={getSkillImage(sajuResult.characterSummary.element)} 
-                        alt="주력 비술" 
-                        className={styles.skillIcon}
-                      />
-                    </div>
-                    <span className={styles.skillName}>
-                      {sajuResult.characterSummary.element.includes('Fire') ? '지옥 화무(火舞)' : '저승 철검술'}
-                    </span>
-                    <span className={styles.skillType}>액티브 비술</span>
-                  </div>
-                  <div className={`${styles.skillSlot} ${styles.locked}`}>
-                    <div className={styles.skillIconFrame}>
-                      <div className={styles.lockOverlay}>🔒</div>
-                    </div>
-                    <span className={styles.skillName}>잠겨진 기운</span>
-                    <span className={styles.skillType}>봉인됨</span>
-                  </div>
-                  <div className={`${styles.skillSlot} ${styles.locked}`}>
-                    <div className={styles.skillIconFrame}>
-                      <div className={styles.lockOverlay}>🔒</div>
-                    </div>
-                    <span className={styles.skillName}>미확인 비술</span>
-                    <span className={styles.skillType}>봉인됨</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
+            {saveError && <p className={styles.errorText}>{saveError}</p>}
             <div className={styles.actionButtons}>
               <button onClick={() => setStep('input')} className={styles.btnOutline}>
                 🔄 사주 다시 입력하기
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaved || isSaving}
+                className={styles.btnPrimary}
+              >
+                {isSaved ? '✅ 저장됨' : isSaving ? '저장 중...' : '💾 저장하기'}
               </button>
             </div>
           </div>
         )}
 
-        {/* 위험 구역: 회원 탈퇴 */}
-        {step !== 'loading' && (
+        {/* 위험 구역: 회원 탈퇴 (로그인 사용자만) */}
+        {step !== 'loading' && user && (
           <div className={styles.danger}>
             <button
               onClick={() => setShowDeleteConfirm(true)}
@@ -541,6 +536,77 @@ export default function Home() {
                 탈퇴하기
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 로그인/회원가입 모달 (저장하기 클릭 시 비로그인 상태면 표시) */}
+      {showAuthModal && (
+        <div className={styles.overlay}>
+          <div className={styles.modal}>
+            <h3>{authMode === 'login' ? '로그인하고 저장하기' : '회원가입하고 저장하기'}</h3>
+            <p>캐릭터를 저장하려면 로그인이 필요합니다.</p>
+
+            <div className={styles.tabContainer}>
+              <button
+                type="button"
+                className={`${styles.tabItem} ${authMode === 'login' ? styles.tabActive : ''}`}
+                onClick={() => { setAuthMode('login'); setAuthError('') }}
+              >
+                로그인
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabItem} ${authMode === 'signup' ? styles.tabActive : ''}`}
+                onClick={() => { setAuthMode('signup'); setAuthError('') }}
+              >
+                회원가입
+              </button>
+            </div>
+
+            <form onSubmit={handleAuthSubmit} className={styles.form}>
+              {authMode === 'signup' && (
+                <input
+                  type="text"
+                  name="nickname"
+                  placeholder="닉네임"
+                  value={authForm.nickname}
+                  onChange={handleAuthChange}
+                  className={styles.input}
+                  required
+                />
+              )}
+              <input
+                type="email"
+                name="email"
+                placeholder="이메일"
+                value={authForm.email}
+                onChange={handleAuthChange}
+                className={styles.input}
+                required
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="비밀번호"
+                value={authForm.password}
+                onChange={handleAuthChange}
+                className={styles.input}
+                minLength={authMode === 'signup' ? 6 : undefined}
+                required
+              />
+
+              {authError && <p className={styles.errorText}>⚠️ {authError}</p>}
+
+              <div className={styles.modalButtons}>
+                <button type="button" onClick={() => setShowAuthModal(false)} className={styles.btnOutline}>
+                  취소
+                </button>
+                <button type="submit" className={styles.btnPrimary} disabled={authLoading}>
+                  {authLoading ? '처리 중...' : (authMode === 'login' ? '로그인 후 저장' : '가입 후 저장')}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
