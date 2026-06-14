@@ -1,9 +1,9 @@
 :root {
-  --gold: #c9a84c;
-  --dark: #1a1a2e;
-  --card-bg: #16213e;
-  --input-bg: #0f3460;
-  --text: #e0e0e0;
+  --gold: #b8860b;
+  --bg: #f7f5f0;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --text: #1a1a1a;
 }
 
 .container {
@@ -11,17 +11,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--dark);
+  background: var(--bg);
 }
 
 .card {
   background: var(--card-bg);
-  border: 1px solid var(--gold);
+  border: 1px solid rgba(184, 134, 11, 0.25);
   border-radius: 12px;
   padding: 40px 36px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 0 30px rgba(201, 168, 76, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
 }
 
 .title {
@@ -36,7 +36,7 @@
   text-align: center;
   margin: 0 0 28px;
   font-size: 0.9rem;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .form {
@@ -47,7 +47,7 @@
 
 .input {
   background: var(--input-bg);
-  border: 1px solid #2a4a7f;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 8px;
   padding: 12px 16px;
   color: var(--text);
@@ -62,7 +62,7 @@
 
 .button {
   background: var(--gold);
-  color: #1a1a2e;
+  color: #ffffff;
   font-weight: 700;
   font-size: 1rem;
   border: none;
@@ -83,7 +83,7 @@
 }
 
 .error {
-  color: #ff6b6b;
+  color: #dc2626;
   font-size: 0.85rem;
   text-align: center;
 }

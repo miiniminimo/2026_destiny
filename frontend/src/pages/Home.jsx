@@ -434,7 +434,7 @@ export default function Home() {
                   <div className={styles.aiPortraitFrame}>
                     <img
                       src={sajuResult.imageData}
-                      alt="내가 신이라면? AI 캐릭터 일러스트"
+                      alt="AI 생성 캐릭터 일러스트"
                       className={styles.aiPortraitImage}
                     />
                   </div>

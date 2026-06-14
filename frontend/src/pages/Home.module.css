@@ -1,18 +1,19 @@
 :root {
-  --gold: #dfb23c;
-  --gold-glow: rgba(223, 178, 60, 0.4);
-  --dark: #0a0a14;
-  --card-bg: rgba(26, 26, 46, 0.6);
-  --card-border: rgba(223, 178, 60, 0.2);
-  --text: #e2e8f0;
-  --text-muted: #94a3b8;
-  --purple-glow: rgba(139, 92, 246, 0.3);
-  --cyan-glow: rgba(6, 182, 212, 0.3);
+  --gold: #b8860b;
+  --gold-glow: rgba(184, 134, 11, 0.25);
+  --bg: #f7f5f0;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --card-border: rgba(184, 134, 11, 0.25);
+  --text: #1a1a1a;
+  --text-muted: #6b7280;
+  --purple: #7c3aed;
+  --purple-glow: rgba(124, 58, 237, 0.12);
+  --cyan-glow: rgba(6, 182, 212, 0.12);
 }
 
 .container {
   min-height: 100vh;
-  background: radial-gradient(circle at 50% 50%, #15102a 0%, var(--dark) 100%);
+  background: radial-gradient(circle at 50% 0%, #fffdf7 0%, var(--bg) 100%);
   color: var(--text);
   font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
   overflow-x: hidden;
@@ -23,10 +24,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 40px;
-  background: rgba(10, 10, 20, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(223, 178, 60, 0.15);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(184, 134, 11, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -36,7 +37,6 @@
   color: var(--gold);
   font-size: 1.4rem;
   font-weight: 800;
-  text-shadow: 0 0 10px var(--gold-glow);
   letter-spacing: 1px;
 }
 
@@ -62,10 +62,7 @@
   font-size: 2.2rem;
   font-weight: 800;
   text-align: center;
-  color: #ffffff;
-  background: linear-gradient(135deg, #ffffff 30%, var(--gold) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text);
   margin-bottom: 12px;
   letter-spacing: -0.5px;
 }
@@ -86,7 +83,7 @@
   border: 1px solid var(--card-border);
   border-radius: 24px;
   padding: 48px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 40px var(--purple-glow);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06), 0 0 40px var(--purple-glow);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -119,11 +116,11 @@
 }
 
 .input {
-  background: rgba(10, 10, 20, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 12px;
   padding: 14px 18px;
-  color: #ffffff;
+  color: var(--text);
   font-size: 1rem;
   transition: all 0.3s;
 }
@@ -131,15 +128,15 @@
 .input:focus {
   outline: none;
   border-color: var(--gold);
-  box-shadow: 0 0 15px rgba(223, 178, 60, 0.2);
-  background: rgba(10, 10, 20, 0.8);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+  background: #ffffff;
 }
 
 /* Tab Style Segmented Controls */
 .tabContainer {
   display: flex;
-  background: rgba(10, 10, 20, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f1efe9;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   padding: 6px;
   gap: 6px;
@@ -161,12 +158,12 @@
 }
 
 .tabItem:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .tabActive {
-  color: #0a0a14 !important;
+  color: #ffffff !important;
   background: var(--gold);
   box-shadow: 0 4px 15px var(--gold-glow);
   font-weight: 700;
@@ -197,11 +194,11 @@
 }
 
 .select, .selectFull {
-  background: rgba(10, 10, 20, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 12px;
   padding: 14px 18px;
-  color: #ffffff;
+  color: var(--text);
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s;
@@ -210,7 +207,7 @@
 .select:focus, .selectFull:focus {
   outline: none;
   border-color: var(--gold);
-  box-shadow: 0 0 15px rgba(223, 178, 60, 0.2);
+  box-shadow: 0 0 0 3px var(--gold-glow);
 }
 
 /* Checkbox Style */
@@ -234,21 +231,21 @@
 /* Buttons */
 .btnSubmit {
   margin-top: 16px;
-  background: linear-gradient(135deg, var(--gold) 0%, #a87b1c 100%);
+  background: linear-gradient(135deg, var(--gold) 0%, #8a6508 100%);
   border: none;
-  color: #0a0a14;
+  color: #ffffff;
   padding: 16px 24px;
   border-radius: 14px;
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 25px rgba(223, 178, 60, 0.3);
+  box-shadow: 0 8px 25px rgba(184, 134, 11, 0.25);
 }
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(223, 178, 60, 0.5), 0 0 15px #ffffff;
+  box-shadow: 0 12px 30px rgba(184, 134, 11, 0.35);
 }
 
 .btnSubmit:active {
@@ -268,14 +265,13 @@
 }
 
 .btnOutline:hover {
-  background: rgba(223, 178, 60, 0.1);
-  box-shadow: 0 0 15px var(--gold-glow);
+  background: var(--gold-glow);
 }
 
 .btnPrimary {
   background: var(--gold);
   border: 1px solid var(--gold);
-  color: #1a1625;
+  color: #ffffff;
   padding: 10px 22px;
   border-radius: 10px;
   cursor: pointer;
@@ -285,7 +281,7 @@
 }
 
 .btnPrimary:hover:not(:disabled) {
-  box-shadow: 0 0 15px var(--gold-glow);
+  box-shadow: 0 4px 15px var(--gold-glow);
   transform: translateY(-1px);
 }
 
@@ -296,8 +292,8 @@
 
 .btnDanger {
   background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: rgba(239, 68, 68, 0.8);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: rgb(220, 38, 38);
   padding: 8px 18px;
   border-radius: 8px;
   cursor: pointer;
@@ -306,15 +302,14 @@
 }
 
 .btnDanger:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgb(239, 68, 68);
-  color: #ff6b6b;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgb(220, 38, 38);
 }
 
 .danger {
   margin-top: 40px;
   text-align: center;
-  opacity: 0.5;
+  opacity: 0.6;
   transition: opacity 0.3s;
 }
 
@@ -335,7 +330,7 @@
 .spinner {
   width: 50px;
   height: 50px;
-  border: 3px solid rgba(223, 178, 60, 0.1);
+  border: 3px solid var(--gold-glow);
   border-top: 3px solid var(--gold);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -363,9 +358,9 @@
 .magicOrb {
   width: 60px;
   height: 60px;
-  background: radial-gradient(circle, #ffffff 0%, var(--gold) 60%, #a855f7 100%);
+  background: radial-gradient(circle, #ffffff 0%, var(--gold) 60%, var(--purple) 100%);
   border-radius: 50%;
-  box-shadow: 0 0 40px var(--gold), 0 0 70px #a855f7;
+  box-shadow: 0 0 30px var(--gold-glow), 0 0 50px var(--purple-glow);
   animation: pulse 2s ease-in-out infinite alternate;
 }
 
@@ -374,7 +369,7 @@
   border: 2px dashed var(--gold);
   border-radius: 50%;
   animation: spin 12s linear infinite;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .magicRing {
@@ -385,7 +380,7 @@
 .magicRing2 {
   width: 150px;
   height: 150px;
-  border-color: #a855f7;
+  border-color: var(--purple);
   animation-duration: 8s;
   animation-direction: reverse;
 }
@@ -401,8 +396,7 @@
 
 .loadingMessage {
   font-size: 1.1rem;
-  color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  color: var(--text);
   font-weight: 500;
   min-height: 3em;
   line-height: 1.5;
@@ -412,14 +406,14 @@
 .progressBar {
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.06);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #a855f7 0%, var(--gold) 100%);
+  background: linear-gradient(90deg, var(--purple) 0%, var(--gold) 100%);
   border-radius: 3px;
   transition: width 0.5s ease-in-out;
 }
@@ -432,7 +426,7 @@
   border: 1px solid var(--card-border);
   border-radius: 28px;
   padding: 48px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 50px rgba(223, 178, 60, 0.15);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.06), 0 0 50px rgba(184, 134, 11, 0.08);
   animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   display: flex;
   flex-direction: column;
@@ -441,13 +435,13 @@
 
 .resultHeader {
   text-align: center;
-  border-bottom: 1px solid rgba(223, 178, 60, 0.15);
+  border-bottom: 1px solid rgba(184, 134, 11, 0.15);
   padding-bottom: 24px;
 }
 
 .badge {
   display: inline-block;
-  background: linear-gradient(135deg, rgba(223, 178, 60, 0.2) 0%, rgba(223, 178, 60, 0.05) 100%);
+  background: var(--gold-glow);
   border: 1px solid var(--gold);
   color: var(--gold);
   font-size: 0.85rem;
@@ -457,7 +451,6 @@
   margin-bottom: 16px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 0 10px rgba(223, 178, 60, 0.2);
 }
 
 .characterTitle {
@@ -471,8 +464,7 @@
 .characterName {
   font-size: 2.4rem;
   font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  color: var(--text);
 }
 
 .cardBody {
@@ -483,8 +475,8 @@
 
 /* Saju Detail Sheet */
 .sajuSheet {
-  background: rgba(10, 10, 20, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #faf8f3;
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
   padding: 24px;
 }
@@ -511,10 +503,10 @@
   flex-direction: column;
   gap: 6px;
   text-align: left;
-  background: rgba(255, 255, 255, 0.02);
+  background: #ffffff;
   padding: 12px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .sheetLabel {
@@ -527,7 +519,7 @@
 .sheetValue {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text);
 }
 
 /* Story Destiny */
@@ -546,16 +538,16 @@
 .storySectionTitle {
   font-size: 1rem;
   font-weight: 700;
-  color: #c4b5fd;
+  color: var(--purple);
   margin: 0 0 8px;
 }
 
 .storyText {
   font-size: 1.05rem;
   line-height: 1.8;
-  color: #cbd5e1;
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
   padding: 24px;
   border-radius: 16px;
   position: relative;
@@ -572,21 +564,21 @@
 
 /* Errors */
 .errorText {
-  color: #ff6b6b;
+  color: #dc2626;
   font-size: 0.9rem;
   font-weight: 600;
   text-align: center;
-  background: rgba(255, 107, 107, 0.1);
+  background: rgba(220, 38, 38, 0.06);
   padding: 12px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 107, 107, 0.2);
+  border: 1px solid rgba(220, 38, 38, 0.15);
 }
 
 /* Modals */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 5, 10, 0.85);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -595,18 +587,18 @@
 }
 
 .modal {
-  background: #0f0f1d;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: #ffffff;
+  border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: 20px;
   padding: 40px;
   max-width: 400px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(239, 68, 68, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
 .modal h3 {
-  color: #ef4444;
+  color: #dc2626;
   margin-bottom: 14px;
   font-size: 1.3rem;
   font-weight: 800;
@@ -632,8 +624,8 @@
 }
 
 @keyframes pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 30px var(--gold), 0 0 50px #a855f7; }
-  100% { transform: scale(1.05); box-shadow: 0 0 50px var(--gold), 0 0 90px #a855f7; }
+  0% { transform: scale(0.95); box-shadow: 0 0 20px var(--gold-glow), 0 0 30px var(--purple-glow); }
+  100% { transform: scale(1.05); box-shadow: 0 0 30px var(--gold-glow), 0 0 50px var(--purple-glow); }
 }
 
 @keyframes slideUp {
@@ -655,32 +647,30 @@
   }
 }
 
-/* AI Pixel Character Visual Card Styles - 통일된 테두리 정밀 강화 */
+/* AI 캐릭터 비주얼 카드 */
 .characterVisualCard {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 15, 30, 0.7);
-  border: 4px double rgba(223, 178, 60, 0.4); /* 전통적인 이중 픽셀 보더 선언 */
+  background: #faf8f3;
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 12px;
   padding: 32px;
   margin-bottom: 8px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(139, 92, 246, 0.15);
   animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* AI(DALL-E)가 생성한 9:16 워터컬러 일러스트용 프레임 */
+/* gpt-image-1이 생성한 9:16 일러스트용 프레임 */
 .aiPortraitFrame {
   position: relative;
   width: 100%;
   max-width: 320px;
   aspect-ratio: 9 / 16;
   border-radius: 8px;
-  padding: 6px;
-  background: #000000;
+  background: #ffffff;
   border: 3px solid var(--gold);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(223, 178, 60, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -690,13 +680,12 @@
 .aiPortraitImage {
   width: 100%;
   height: 100%;
-  border-radius: 4px;
-  object-fit: contain;
-  background: #000000;
+  object-fit: cover;
+  background: #ffffff;
 }
 
 .imagePlaceholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   text-align: center;
   font-size: 14px;
   line-height: 1.6;
@@ -708,11 +697,10 @@
   align-items: center;
   gap: 8px;
   margin-top: 18px;
-  background: rgba(10, 10, 20, 0.9);
+  background: #ffffff;
   padding: 8px 24px;
   border-radius: 8px;
-  border: 1px dashed rgba(223, 178, 60, 0.4);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  border: 1px dashed var(--gold);
 }
 
 .visualText {
@@ -720,19 +708,18 @@
   font-weight: 700;
   color: var(--gold);
   letter-spacing: 0.5px;
-  text-shadow: 0 0 5px rgba(223, 178, 60, 0.3);
 }
 
 .visualSparkle {
-  color: #a855f7;
+  color: var(--purple);
   font-size: 0.9rem;
   animation: pulse 1s infinite alternate;
 }
 
 /* Shamanic Skills - 콤팩트한 정사각형 스킬 슬롯 세트 */
 .skillContainer {
-  background: rgba(10, 10, 20, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #faf8f3;
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
   padding: 24px;
   text-align: left;
@@ -752,16 +739,16 @@
   align-items: center;
   gap: 8px;
   text-align: center;
-  background: rgba(255, 255, 255, 0.02);
+  background: #ffffff;
   padding: 16px 8px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
 .skillSlot:hover:not(.locked) {
-  background: rgba(223, 178, 60, 0.03);
-  border-color: rgba(223, 178, 60, 0.2);
+  background: var(--gold-glow);
+  border-color: var(--gold);
 }
 
 .skillIconFrame {
@@ -769,15 +756,14 @@
   width: 76px;
   height: 76px;
   aspect-ratio: 1 / 1;
-  background: #080810;
-  border: 2px solid rgba(223, 178, 60, 0.3);
+  background: #f1efe9;
+  border: 2px solid rgba(184, 134, 11, 0.3);
   border-radius: 10px;
   padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
 .skillIcon {
@@ -792,7 +778,7 @@
 .skillName {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text);
 }
 
 .skillType {
@@ -807,12 +793,11 @@
 
 .lockOverlay {
   font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.04);
 }
